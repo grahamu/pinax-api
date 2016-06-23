@@ -130,10 +130,12 @@ class Resource(object):
             viewset, child_obj = viewset.parent, obj
         return kwargs
 
-    def get_self_link(self, request=None):
+    def get_self_link(self, request=None, querystring=None):
         kwargs = self.resolve_url_kwargs()
         url = reverse("{}-detail".format(self.viewset.url.base_name), kwargs=kwargs)
         if request is not None and hasattr(request, "build_absolute_uri"):
+            if querystring is not None:
+                url += "?{}".format(querystring)
             return request.build_absolute_uri(url)
         return url
 

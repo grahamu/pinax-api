@@ -3,13 +3,16 @@ import mock
 
 from django.contrib.auth.models import AnonymousUser
 from django.core.urlresolvers import reverse
+from django.test import RequestFactory
 
 from pinax import api
 
+from .. import registry
 from .models import (
     Article,
     Author,
 )
+from .resources import AuthorResource
 
 
 class ArticleViewSetTestCase(api.TestCase):
@@ -164,6 +167,25 @@ class ArticleViewSetTestCase(api.TestCase):
                 },
             }
             self.assertEqual(expected, payload)
+
+    def test_resource_get_self_link(self):
+        """
+        Ensure "self" link includes passed querystring.
+        """
+        author = Author.objects.create(name="First Author")
+        author_resource = registry["author"]
+        resource = author_resource(author)
+
+        def build_absolute_uri(url):
+            return url
+
+        request = RequestFactory()
+        request.GET = {}
+        request.build_absolute_uri = build_absolute_uri
+
+        querystring = "?key=value"
+        link = resource.get_self_link(request, querystring=querystring)
+        self.assertIn(querystring, link)
 
     def test_create(self):
 
